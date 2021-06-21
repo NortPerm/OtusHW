@@ -19,7 +19,6 @@ func TestUnpack(t *testing.T) {
 		{input: "d\n5abc", expected: "d\n\n\n\n\nabc"},
 		{input: "\t2\x404", expected: "\t\t@@@@"},
 		{input: "ᄆ5", expected: "ᄆᄆᄆᄆᄆ"},
-		// uncomment if task with asterisk completed
 		{input: `qwe\4\5`, expected: `qwe45`},
 		{input: `qwe\45`, expected: `qwe44444`},
 		{input: `qwe\\5`, expected: `qwe\\\\\`},
@@ -39,12 +38,23 @@ func TestUnpack(t *testing.T) {
 }
 
 func TestUnpackInvalidString(t *testing.T) {
-	invalidStrings := []string{"3abc", "45", "aaa10b", "a4bc2d5e23", `qw\ne`, `as3\`}
+	invalidStrings := []string{"3abc", "45", "aaa10b", "a4bc2d5e23"}
 	for _, tc := range invalidStrings {
 		tc := tc
 		t.Run(tc, func(t *testing.T) {
 			_, err := Unpack(tc)
 			require.Truef(t, errors.Is(err, ErrInvalidString), "actual error %q", err)
+		})
+	}
+}
+
+func TestUnpackInvalidEscapeRune(t *testing.T) {
+	invalidEscapes := []string{`qw\ne`, `as3\`}
+	for _, tc := range invalidEscapes {
+		tc := tc
+		t.Run(tc, func(t *testing.T) {
+			_, err := Unpack(tc)
+			require.Truef(t, errors.Is(err, ErrInvalidEscapedRune), "actual error %q", err)
 		})
 	}
 }

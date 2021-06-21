@@ -6,7 +6,10 @@ import (
 	"unicode"
 )
 
-var ErrInvalidString = errors.New("invalid string")
+var (
+	ErrInvalidString      = errors.New("invalid string")
+	ErrInvalidEscapedRune = errors.New("invalid ecsape-rune")
+)
 
 func escapeRune(r rune) bool {
 	return r == '\\' || unicode.IsDigit(r)
@@ -56,7 +59,7 @@ func Unpack(input string) (string, error) {
 	for _, currentRune := range input {
 		if escapeMode {
 			if !escapeRune(currentRune) {
-				return "", ErrInvalidString
+				return "", ErrInvalidEscapedRune
 			}
 			scan.putInMemory(currentRune)
 			escapeMode = false
@@ -66,11 +69,11 @@ func Unpack(input string) (string, error) {
 				escapeMode = true
 			case unicode.IsDigit(currentRune):
 				if err := scan.repeat(currentRune); err != nil {
-					return "", ErrInvalidString
+					return "", err
 				}
 			default:
 				if err := scan.putInMemory(currentRune); err != nil {
-					return "", ErrInvalidString
+					return "", err
 				}
 			}
 		}
