@@ -26,8 +26,8 @@ func escapeRune(r rune) bool {
 func Unpack(input string) (string, error) {
 	lastRune := rune(0)
 	escapeMode := false
-	//runes := []rune(input + "\x00") // add terminator zero rune
-	input = input + "\x00"
+	// add terminator zero rune
+	input += "\x00"
 	var result strings.Builder
 	for _, currentRune := range input {
 		if currentRune == '\\' && !escapeMode {
@@ -56,7 +56,6 @@ func Unpack(input string) (string, error) {
 			}
 			escapeMode = false
 		}
-
 	}
 	return result.String(), nil
 }
