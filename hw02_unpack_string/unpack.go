@@ -15,16 +15,16 @@ func escapeRune(r rune) bool {
 	return r == '\\' || unicode.IsDigit(r)
 }
 
-type scanner struct {
+type FSM struct {
 	memory rune
 	result strings.Builder
 }
 
-func newScanner() *scanner {
-	return &scanner{0, strings.Builder{}}
+func newFSM() *FSM {
+	return &FSM{0, strings.Builder{}}
 }
 
-func (s *scanner) putInMemory(r rune) error {
+func (s *FSM) putInMemory(r rune) error {
 	if s.memory > 0 {
 		_, err := s.result.WriteRune(s.memory)
 		if err != nil {
@@ -35,7 +35,7 @@ func (s *scanner) putInMemory(r rune) error {
 	return nil
 }
 
-func (s *scanner) repeat(r rune) error {
+func (s *FSM) repeat(r rune) error {
 	if s.memory == 0 {
 		return ErrInvalidString
 	}
@@ -53,7 +53,7 @@ func (s *scanner) repeat(r rune) error {
 
 func Unpack(input string) (string, error) {
 	escapeMode := false
-	scan := newScanner()
+	FSM := newFSM()
 	// add terminator zero rune
 	input += "\x00"
 	for _, currentRune := range input {
@@ -61,22 +61,22 @@ func Unpack(input string) (string, error) {
 			if !escapeRune(currentRune) {
 				return "", ErrInvalidEscapedRune
 			}
-			scan.putInMemory(currentRune)
+			FSM.putInMemory(currentRune)
 			escapeMode = false
 		} else {
 			switch {
 			case currentRune == '\\':
 				escapeMode = true
 			case unicode.IsDigit(currentRune):
-				if err := scan.repeat(currentRune); err != nil {
+				if err := FSM.repeat(currentRune); err != nil {
 					return "", err
 				}
 			default:
-				if err := scan.putInMemory(currentRune); err != nil {
+				if err := FSM.putInMemory(currentRune); err != nil {
 					return "", err
 				}
 			}
 		}
 	}
-	return scan.result.String(), nil
+	return FSM.result.String(), nil
 }
