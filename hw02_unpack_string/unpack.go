@@ -8,54 +8,72 @@ import (
 
 var ErrInvalidString = errors.New("invalid string")
 
-func addRuneToBuilder(b *strings.Builder, r rune, times int32) error {
+func escapeRune(r rune) bool {
+	return r == '\\' || unicode.IsDigit(r)
+}
+
+type scanner struct {
+	memory rune
+	result strings.Builder
+}
+
+func newScanner() *scanner {
+	return &scanner{0, strings.Builder{}}
+}
+
+func (s *scanner) putInMemory(r rune) error {
+	if s.memory > 0 {
+		_, err := s.result.WriteRune(s.memory)
+		if err != nil {
+			return err
+		}
+	}
+	s.memory = r
+	return nil
+}
+
+func (s *scanner) repeat(r rune) error {
+	if s.memory == 0 {
+		return ErrInvalidString
+	}
+	times := r - '0'
 	for times > 0 {
-		_, err := b.WriteRune(r)
+		_, err := s.result.WriteRune(s.memory)
 		if err != nil {
 			return err
 		}
 		times--
 	}
+	s.memory = 0
 	return nil
 }
 
-func escapeRune(r rune) bool {
-	return r == '\\' || unicode.IsDigit(r)
-}
-
 func Unpack(input string) (string, error) {
-	lastRune := rune(0)
 	escapeMode := false
+	scan := newScanner()
 	// add terminator zero rune
 	input += "\x00"
-	var result strings.Builder
 	for _, currentRune := range input {
-		if currentRune == '\\' && !escapeMode {
-			escapeMode = true
-		} else {
-			if !escapeRune(currentRune) && escapeMode {
+		if escapeMode {
+			if !escapeRune(currentRune) {
 				return "", ErrInvalidString
 			}
-			if unicode.IsDigit(currentRune) && !escapeMode {
-				if lastRune > 0 {
-					if err := addRuneToBuilder(&result, lastRune, currentRune-'0'); err != nil {
-						return "", err
-					}
-				} else {
+			scan.putInMemory(currentRune)
+			escapeMode = false
+		} else {
+			switch {
+			case currentRune == '\\':
+				escapeMode = true
+			case unicode.IsDigit(currentRune):
+				if err := scan.repeat(currentRune); err != nil {
 					return "", ErrInvalidString
 				}
-				lastRune = 0
-			} else {
-				if lastRune > 0 {
-					_, err := result.WriteRune(lastRune)
-					if err != nil {
-						return "", err
-					}
+			default:
+				if err := scan.putInMemory(currentRune); err != nil {
+					return "", ErrInvalidString
 				}
-				lastRune = currentRune
 			}
-			escapeMode = false
 		}
 	}
-	return result.String(), nil
+	return scan.result.String(), nil
 }
