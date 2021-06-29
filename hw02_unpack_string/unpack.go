@@ -57,14 +57,14 @@ func (s *FSM) repeat(r rune) error {
 	return nil
 }
 
-func (s *FSM) done() error {
+func (s *FSM) done() (string, error) {
 	if s.escapeMode {
-		return ErrInvalidEscapedRune
+		return "", ErrInvalidEscapedRune
 	}
 	if s.memory.used {
 		s.result.WriteRune(s.memory.r)
 	}
-	return nil
+	return s.result.String(), nil
 }
 
 func Unpack(input string) (string, error) {
@@ -91,8 +91,5 @@ func Unpack(input string) (string, error) {
 			}
 		}
 	}
-	if err := FSM.done(); err != nil {
-		return "", err
-	}
-	return FSM.result.String(), nil
+	return FSM.done()
 }
