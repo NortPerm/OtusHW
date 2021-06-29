@@ -15,47 +15,57 @@ func escapeRune(r rune) bool {
 	return r == '\\' || unicode.IsDigit(r)
 }
 
+type memory struct {
+	r    rune
+	used bool
+}
 type FSM struct {
-	memory rune
+	memory memory
 	result strings.Builder
 }
 
 func newFSM() *FSM {
-	return &FSM{0, strings.Builder{}}
+	return &FSM{memory{}, strings.Builder{}}
 }
 
 func (s *FSM) putInMemory(r rune) error {
-	if s.memory > 0 {
-		_, err := s.result.WriteRune(s.memory)
+	if s.memory.used {
+		_, err := s.result.WriteRune(s.memory.r)
 		if err != nil {
 			return err
 		}
 	}
-	s.memory = r
+	s.memory = memory{r: r, used: true}
 	return nil
 }
 
 func (s *FSM) repeat(r rune) error {
-	if s.memory == 0 {
+	if !s.memory.used {
 		return ErrInvalidString
 	}
 	times := r - '0'
 	for times > 0 {
-		_, err := s.result.WriteRune(s.memory)
+		_, err := s.result.WriteRune(s.memory.r)
 		if err != nil {
 			return err
 		}
 		times--
 	}
-	s.memory = 0
+	s.memory.used = false
 	return nil
+}
+
+func (s *FSM) done() string {
+	if s.memory.used {
+		s.result.WriteRune(s.memory.r)
+	}
+	return s.result.String()
 }
 
 func Unpack(input string) (string, error) {
 	escapeMode := false
 	FSM := newFSM()
 	// add terminator zero rune
-	input += "\x00"
 	for _, currentRune := range input {
 		if escapeMode {
 			if !escapeRune(currentRune) {
@@ -78,5 +88,5 @@ func Unpack(input string) (string, error) {
 			}
 		}
 	}
-	return FSM.result.String(), nil
+	return FSM.done(), nil
 }
