@@ -6,8 +6,7 @@ import (
 	"strings"
 )
 
-// double negation
-// punct and not dash ~~ not ( not punct or dash)
+// double negation: punct and not dash ~~ not ( not punct or dash)
 const excludePunctSigns = `-`
 
 var (
