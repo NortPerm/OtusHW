@@ -21,6 +21,18 @@ type list struct {
 	// Place your code here.
 }
 
+func (l list) Len() int {
+	return 0
+}
+
+func (l list) Front() *ListItem {
+	return nil
+}
+
+func (l list) Back() *ListItem {
+	return nil
+}
+
 func NewList() List {
 	return new(list)
 }
