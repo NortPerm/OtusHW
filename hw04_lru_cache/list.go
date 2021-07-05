@@ -88,7 +88,6 @@ func NewList() List {
 	return &list{}
 }
 
-// service function for test
 func intoSlice(l List) []int {
 	elems := make([]int, 0, l.Len())
 	for i := l.Front(); i != nil; i = i.Next {
