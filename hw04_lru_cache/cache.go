@@ -42,7 +42,8 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 }
 
 func (c *lruCache) Get(key Key) (interface{}, bool) {
-	// no need for mutex due read-map-only
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	val, ok := c.items[key]
 	if ok {
 		c.queue.MoveToFront(val)
