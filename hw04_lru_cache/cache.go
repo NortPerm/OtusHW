@@ -9,8 +9,6 @@ type Cache interface {
 }
 
 type lruCache struct {
-	Cache // Remove me after realization.
-
 	capacity int
 	queue    List
 	items    map[Key]*ListItem
@@ -26,11 +24,10 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 	if ok {
 		val.Value = value
 		return true
-	} else {
-		c.queue.PushFront(value)
-		c.items[key] = c.queue.Front()
-		return false
 	}
+	c.queue.PushFront(value)
+	c.items[key] = c.queue.Front()
+	return false
 }
 
 func (c *lruCache) Get(key Key) (interface{}, bool) {
@@ -38,9 +35,8 @@ func (c *lruCache) Get(key Key) (interface{}, bool) {
 	if ok {
 		c.queue.MoveToFront(val)
 		return val.Value, true
-	} else {
-		return nil, false
 	}
+	return nil, false
 }
 
 func (c *lruCache) Clear() {
