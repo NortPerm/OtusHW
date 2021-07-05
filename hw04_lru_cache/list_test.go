@@ -17,12 +17,11 @@ func TestList(t *testing.T) {
 
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
-
 		l.PushFront(10) // [10]
 		l.PushBack(20)  // [10, 20]
 		l.PushBack(30)  // [10, 20, 30]
 		require.Equal(t, 3, l.Len())
-
+		print(l.Front().Value.(int))
 		middle := l.Front().Next // 20
 		l.Remove(middle)         // [10, 30]
 		require.Equal(t, 2, l.Len())
