@@ -87,3 +87,12 @@ func (l *list) MoveToFront(i *ListItem) {
 func NewList() List {
 	return &list{}
 }
+
+// service function for test
+func intoSlice(l List) []int {
+	elems := make([]int, 0, l.Len())
+	for i := l.Front(); i != nil; i = i.Next {
+		elems = append(elems, i.Value.(int)) // beware, can be panicked
+	}
+	return elems
+}
