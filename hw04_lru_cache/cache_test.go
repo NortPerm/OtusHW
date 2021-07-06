@@ -1,6 +1,7 @@
 package hw04lrucache
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -87,12 +88,12 @@ func TestCache(t *testing.T) {
 		c := NewCache(3)
 		cmd := []int{1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5, 3, 5}
 		for ind, val := range cmd {
-			c.Set(Key(val), ind)
+			c.Set(Key(fmt.Sprint(val)), ind)
 		}
 		ans := []int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 3, 5}
 		for ind, val := range ans {
 			if val > 0 {
-				v, ok := c.Get(Key(val))
+				v, ok := c.Get(Key(fmt.Sprint(val)))
 				require.True(t, ok)
 				require.Equal(t, ind, v)
 			}
