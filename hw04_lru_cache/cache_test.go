@@ -1,6 +1,7 @@
 package hw04lrucache
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -47,16 +48,60 @@ func TestCache(t *testing.T) {
 		val, ok = c.Get("ccc")
 		require.False(t, ok)
 		require.Nil(t, val)
+
+		c.Clear()
+		val, ok = c.Get("aaa")
+		require.False(t, ok)
+		require.Nil(t, val)
+		c.Set("aaa", 100)
+		val, ok = c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 100, val)
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		c := NewCache(3)
+		c.Set("a", 100)
+		c.Set("b", 200)
+		c.Set("c", 300)
+		c.Set("d", 400)
+		val, ok := c.Get("a")
+		require.False(t, ok)
+		require.Nil(t, val)
+		c.Set("b", 500)
+		c.Set("e", 600)
+		val, ok = c.Get("c")
+		require.False(t, ok)
+		require.Nil(t, val)
+		val, ok = c.Get("b")
+		require.True(t, ok)
+		require.Equal(t, 500, val)
+		val, ok = c.Get("d")
+		require.True(t, ok)
+		require.Equal(t, 400, val)
+		val, ok = c.Get("e")
+		require.True(t, ok)
+		require.Equal(t, 600, val)
+	})
+
+	t.Run("wiki example", func(t *testing.T) {
+		c := NewCache(3)
+		cmd := []int{1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5, 3, 5}
+		for ind, val := range cmd {
+			c.Set(Key(fmt.Sprint(val)), ind)
+		}
+		ans := []int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 3, 5}
+		for ind, val := range ans {
+			if val > 0 {
+				v, ok := c.Get(Key(fmt.Sprint(val)))
+				require.True(t, ok)
+				require.Equal(t, ind, v)
+			}
+		}
 	})
 }
 
 func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // Remove me if task with asterisk completed.
-
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
