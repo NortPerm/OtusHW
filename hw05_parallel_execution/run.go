@@ -7,17 +7,18 @@ import (
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
-type Task func() error
-
-type Pool struct {
-	Tasks          []Task
-	workersCount   int
-	maxErrorsCount int
-	tasksChan      chan Task
-	wg             sync.WaitGroup
-	mu             sync.Mutex
-	errCount       int
-}
+type (
+	Task func() error
+	Pool struct {
+		Tasks          []Task
+		workersCount   int
+		maxErrorsCount int
+		tasksChan      chan Task
+		wg             sync.WaitGroup
+		mu             sync.Mutex
+		errCount       int
+	}
+)
 
 func NewPool(tasks []Task, workersCount int, maxErrorsCount int) *Pool {
 	return &Pool{
@@ -32,17 +33,11 @@ func (p *Pool) Run() error {
 	for i := 0; i < p.workersCount; i++ {
 		go p.work()
 	}
-
 	for _, task := range p.Tasks {
-		// put task im queue if not enough errors
-
 		p.wg.Add(1)
 		p.tasksChan <- task
-
 	}
-
 	close(p.tasksChan)
-
 	p.wg.Wait()
 	if p.errCount >= p.maxErrorsCount {
 		return ErrErrorsLimitExceeded
@@ -56,11 +51,11 @@ func (p *Pool) work() {
 		continueAdd := p.errCount < p.maxErrorsCount
 		p.mu.Unlock()
 		if continueAdd {
+			// put task im queue if not enough errors
 			if err := task(); err != nil {
 				p.mu.Lock()
 				p.errCount++
 				p.mu.Unlock()
-
 			}
 		}
 		p.wg.Done()
