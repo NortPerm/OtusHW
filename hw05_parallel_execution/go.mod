@@ -1,4 +1,4 @@
-module github.com/NortPerm/OtusHW/hw04_lru_cache
+module github.com/NortPerm/OtusHW/hw05_parallel_execution
 
 go 1.16
 
