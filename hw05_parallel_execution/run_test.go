@@ -118,5 +118,4 @@ func TestRun(t *testing.T) {
 		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
 		require.Equal(t, runTasksCount, int32(0), "tasks were started")
 	})
-
 }
