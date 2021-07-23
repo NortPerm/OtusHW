@@ -1,4 +1,4 @@
-module github.com/fixme_my_friend/hw05_parallel_execution
+module github.com/NortPerm/OtusHW/hw04_lru_cache
 
 go 1.16
 
