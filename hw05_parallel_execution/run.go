@@ -29,21 +29,26 @@ func NewPool(tasks []Task, workersCount int, maxErrorsCount int) *Pool {
 	}
 }
 
+func (p *Pool) ContinueAdd() bool {
+	p.mu.Lock()
+	continueAdd := p.errCount < p.maxErrorsCount
+	p.mu.Unlock()
+	return continueAdd
+}
+
 func (p *Pool) Run() error {
 	for i := 0; i < p.workersCount; i++ {
 		go p.work()
 	}
 	for _, task := range p.Tasks {
-		if p.errCount < p.maxErrorsCount {
-			p.mu.Lock()
+		if p.ContinueAdd() {
 			p.wg.Add(1) // в этот момент другой воркер может вернуть последнюю ошибку
 			p.tasksChan <- task
-			p.mu.Unlock()
 		}
 	}
 	close(p.tasksChan)
 	p.wg.Wait()
-	if p.errCount >= p.maxErrorsCount {
+	if !p.ContinueAdd() {
 		return ErrErrorsLimitExceeded
 	}
 	return nil
@@ -51,12 +56,9 @@ func (p *Pool) Run() error {
 
 func (p *Pool) work() {
 	for task := range p.tasksChan {
-		p.mu.Lock()
 		// существует ТЕОРЕТИЧЕСКАЯ ВОЗМОЖНОСТЬ, что последняя ошибка произошла в тот момент, когда мы добавляли таску в канал
 		// поэтому проверим лишний раз чтобы не выполнить на 1 задачу больше
-		continueAdd := p.errCount < p.maxErrorsCount
-		p.mu.Unlock()
-		if continueAdd {
+		if p.ContinueAdd() {
 			// put task in queue if not enough errors
 			if err := task(); err != nil {
 				p.mu.Lock()

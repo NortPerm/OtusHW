@@ -94,8 +94,8 @@ func TestRun(t *testing.T) {
 		// важно еще и то что время выполнения у нас фиксировано - иначе может быть одна длинная задача с ошибкой, а остальные воркеры все делают
 		// на самом деле это обощение первого теста где по сути n=1 и число тасков не более 1*maxErrorsCount + workersCount
 		// простите что на русском, но на английском пояснить этот не самый тривиальный момент не смог
-		require.LessOrEqual(t, runTasksCount, int32(n*maxErrorsCount+workersCount-1), "extra tasks were started")
-		require.GreaterOrEqual(t, runTasksCount, int32(n*maxErrorsCount-workersCount+1), "some tasks were not started")
+		require.LessOrEqual(t, runTasksCount, int32(n*maxErrorsCount+1+workersCount), "extra tasks were started")
+		require.GreaterOrEqual(t, runTasksCount, int32(n*maxErrorsCount+1-workersCount), "some tasks were not started")
 	})
 
 	t.Run("Zero errors (no one task started)", func(t *testing.T) {
