@@ -34,8 +34,10 @@ func (p *Pool) Run() error {
 		go p.work()
 	}
 	for _, task := range p.Tasks {
-		p.wg.Add(1)
-		p.tasksChan <- task
+		if p.errCount < p.maxErrorsCount {
+			p.wg.Add(1)
+			p.tasksChan <- task
+		}
 	}
 	close(p.tasksChan)
 	p.wg.Wait()
@@ -48,10 +50,12 @@ func (p *Pool) Run() error {
 func (p *Pool) work() {
 	for task := range p.tasksChan {
 		p.mu.Lock()
+		// существует ТЕОРЕТИЧЕСКАЯ ВОЗМОЖНОСТЬ, что последняя ошибка произошла в тот момент, когда мы добавляли таску в канал
+		// поэтому проверим лишний раз чтобы не выполнить на 1 задачу больше
 		continueAdd := p.errCount < p.maxErrorsCount
 		p.mu.Unlock()
 		if continueAdd {
-			// put task im queue if not enough errors
+			// put task in queue if not enough errors
 			if err := task(); err != nil {
 				p.mu.Lock()
 				p.errCount++

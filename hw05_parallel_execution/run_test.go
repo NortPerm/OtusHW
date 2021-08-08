@@ -69,10 +69,10 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("every n-th task has error", func(t *testing.T) {
-		tasksCount := 50
+		tasksCount := 50 // number of task
 		tasks := make([]Task, 0, tasksCount)
 		var runTasksCount int32
-		n := rand.Intn(10) + 1
+		n := rand.Intn(10) + 1 // every n-th task has error
 		for i := 0; i < tasksCount; i++ {
 			err := error(nil)
 			if i%n == n-1 {
@@ -90,8 +90,8 @@ func TestRun(t *testing.T) {
 		err := Run(tasks, workersCount, maxErrorsCount)
 
 		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
-		require.LessOrEqual(t, runTasksCount, int32(n*maxErrorsCount+1+workersCount), "extra tasks were started")
-		require.GreaterOrEqual(t, runTasksCount, int32(n*maxErrorsCount+1-workersCount), "some tasks were not started")
+		require.LessOrEqual(t, runTasksCount, int32(n*maxErrorsCount+workersCount), "extra tasks were started")
+		require.GreaterOrEqual(t, runTasksCount, int32(n*maxErrorsCount-workersCount), "some tasks were not started")
 	})
 
 	t.Run("Zero errors (no one task started)", func(t *testing.T) {
