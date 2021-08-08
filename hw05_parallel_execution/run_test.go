@@ -74,7 +74,7 @@ func TestRun(t *testing.T) {
 		var runTasksCount int32
 		n := rand.Intn(10) + 1 // every n-th task has error
 		for i := 0; i < tasksCount; i++ {
-			err := error(nil)
+			var err error
 			if i%n == n-1 {
 				err = fmt.Errorf("error from task %d", i)
 			}
@@ -88,10 +88,14 @@ func TestRun(t *testing.T) {
 		workersCount := rand.Intn(4) + 1
 		maxErrorsCount := rand.Intn(3) + 1
 		err := Run(tasks, workersCount, maxErrorsCount)
-
 		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
-		require.LessOrEqual(t, runTasksCount, int32(n*maxErrorsCount+workersCount), "extra tasks were started")
-		require.GreaterOrEqual(t, runTasksCount, int32(n*maxErrorsCount-workersCount), "some tasks were not started")
+		// если бы у нас все таски выполнялись последовательно, то выполнилось бы maxErrorsCount*n - потому что каждый n-ый таск генерит ошибку
+		// у нас же исполнение конкурентно - это значит что число запущенных тасков может быть скорректировано на workersCount (если уж совсем упарываться то на workersCount-1)
+		// важно еще и то что время выполнения у нас фиксировано - иначе может быть одна длинная задача с ошибкой, а остальные воркеры все делают
+		// на самом деле это обощение первого теста где по сути n=1 и число тасков не более 1*maxErrorsCount + workersCount
+		// простите что на русском, но на английском пояснить этот не самый тривиальный момент не смог
+		require.LessOrEqual(t, runTasksCount, int32(n*maxErrorsCount+workersCount-1), "extra tasks were started")
+		require.GreaterOrEqual(t, runTasksCount, int32(n*maxErrorsCount-workersCount+1), "some tasks were not started")
 	})
 
 	t.Run("Zero errors (no one task started)", func(t *testing.T) {

@@ -35,7 +35,7 @@ func (p *Pool) Run() error {
 	}
 	for _, task := range p.Tasks {
 		if p.errCount < p.maxErrorsCount {
-			p.wg.Add(1)
+			p.wg.Add(1) // в этот момент другой воркер может вернуть последнюю ошибку
 			p.tasksChan <- task
 		}
 	}
