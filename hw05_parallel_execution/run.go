@@ -50,9 +50,8 @@ func (p *Pool) Run() error {
 		if p.ErrorsLimitExceeded() {
 			break
 		}
-		p.wg.Add(1) // в этот момент другой воркер может вернуть последнюю ошибку
+		p.wg.Add(1)
 		p.tasksChan <- task
-
 	}
 	close(p.tasksChan)
 	p.wg.Wait()
